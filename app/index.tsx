@@ -9,14 +9,28 @@ import {
   Platform,
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
+import { userRepository } from '../database/userRepository';
+import { useRouter } from 'expo-router';
 
 export default function Login() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    // Implementar lógica de login aqui
-    console.log("Login:", username, password);
+  const handleLogin = async () => {
+    try {
+      const user = await userRepository.authenticate(username, password);
+      if (user) {
+        console.log('Login realizado com sucesso:', user);
+        router.replace('screens/home' as any);
+      } else {
+        console.log('Usuário ou senha inválidos');
+        // Aqui você pode implementar uma mensagem de erro
+      }
+    } catch (error) {
+      console.error('Erro ao realizar login:', error);
+      // Aqui você pode implementar uma mensagem de erro
+    }
   };
 
   return (
