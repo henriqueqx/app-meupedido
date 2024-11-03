@@ -1,16 +1,92 @@
-# Welcome to your Expo app 👋
+# Lanchonete App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile desenvolvido em React Native para gestão completa de lanchonetes, oferecendo funcionalidades de vendas, controle de estoque, gestão de usuários e relatórios.
 
-## Get started
+## 🚀 Sobre o Projeto
 
-1. Install dependencies
+Este aplicativo foi desenvolvido para atender às necessidades de lanchonetes de pequeno e médio porte, oferecendo uma solução completa e intuitiva para gestão do negócio através de dispositivos móveis.
+
+## 💻 Tecnologias Utilizadas
+
+- React Native
+- TypeScript
+- SQLite
+- Redux
+- React Navigation
+- Styled Components
+
+## 📱 Funcionalidades Principais
+
+- Gestão de vendas e pedidos
+- Controle de estoque
+- Gestão de usuários e permissões
+- Relatórios gerenciais
+- Funcionamento offline
+- Backup automático
+
+## 📋 Requisitos do Sistema
+
+### Requisitos Funcionais
+
+#### Gestão de Usuários
+- Cadastro de funcionários com níveis de acesso
+- Autenticação com login e senha
+- Recuperação de senha
+- Edição de perfil
+
+#### Gestão de Vendas
+- Registro de vendas com itens e quantidades
+- Geração de número único por venda
+- Cálculo automático de valores
+- Múltiplas formas de pagamento
+- Histórico de vendas
+
+#### Gestão de Estoque
+- Cadastro e controle de produtos
+- Atualização automática após vendas
+- Sistema de alertas
+- Histórico de movimentações
+
+#### Relatórios
+- Vendas por período
+- Produtos mais vendidos
+- Movimentação de estoque
+- Fluxo de caixa
+
+### Requisitos Não Funcionais
+
+#### Usabilidade
+- Interface intuitiva para mobile
+- Modo escuro/claro
+- Tempo de resposta < 2s
+- Feedback visual
+
+#### Performance
+- Funcionamento offline
+- Suporte multi-usuário
+- Backup automático
+
+#### Segurança
+- Criptografia de dados
+- Log de operações
+- Logout automático
+- Validação de dados
+
+## 🔧 Configuração do Ambiente
+
+1. Clone o repositório
+
+```bash
+git clone https://github.com/your-username/lanchonete-app.git
+```
+
+2. Install dependencies
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. Start the app
 
    ```bash
     npx expo start
