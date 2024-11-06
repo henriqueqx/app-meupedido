@@ -85,6 +85,13 @@ export default function RootLayout() {
           presentation: 'modal'
         }} 
       />
+      <Stack.Screen 
+        name="screens/users/edit" 
+        options={{ 
+          title: 'Editar Usuário',
+          presentation: 'modal'
+        }} 
+      />
     </Stack>
   );
 }

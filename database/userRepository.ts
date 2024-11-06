@@ -120,5 +120,30 @@ export const userRepository = {
         );
       });
     });
+  },
+
+  findById: (id: number): Promise<User | null> => {
+    return new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          `SELECT u.*, al.name as access_level_name 
+           FROM users u 
+           JOIN access_levels al ON u.access_level_id = al.id 
+           WHERE u.id = ?`,
+          [id],
+          (_, { rows }) => {
+            if (rows.length > 0) {
+              resolve(rows.item(0));
+            } else {
+              resolve(null);
+            }
+          },
+          (_, error) => {
+            reject(error);
+            return false;
+          }
+        );
+      });
+    });
   }
 }; 

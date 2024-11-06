@@ -36,6 +36,13 @@ export default function Users() {
     }
   };
 
+  const handleEditUser = (userId: number) => {
+    router.push({
+      pathname: 'screens/users/edit',
+      params: { userId }
+    } as any);
+  };
+
   const renderUserItem = ({ item }: { item: User }) => (
     <View style={styles.userCard}>
       <View style={styles.userInfo}>
@@ -49,10 +56,7 @@ export default function Users() {
       </View>
       <View style={styles.userActions}>
         <TouchableOpacity 
-          onPress={() => router.push({
-            pathname: 'screens/users/edit',
-            params: { userId: item.id }
-          } as any)}
+          onPress={() => handleEditUser(item.id!)}
           style={styles.actionButton}
         >
           <Ionicons name="create-outline" size={24} color="#0a7ea4" />
