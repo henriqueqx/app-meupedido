@@ -1,30 +1,36 @@
-import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { userRepository, User } from '../../database/userRepository';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
+      setIsLoading(true);
       const usersList = await userRepository.findAll();
       setUsers(usersList);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUsers();
+    }, [loadUsers])
+  );
 
   const handleDeactivateUser = async (userId: number) => {
     try {
       await userRepository.deactivate(userId);
-      loadUsers(); // Recarrega a lista após desativar
+      loadUsers();
     } catch (error) {
       console.error('Erro ao desativar usuário:', error);
     }
@@ -61,6 +67,14 @@ export default function Users() {
     </View>
   );
 
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#0a7ea4" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <TouchableOpacity 
@@ -71,12 +85,18 @@ export default function Users() {
         <Text style={styles.addButtonText}>Novo Usuário</Text>
       </TouchableOpacity>
 
-      <FlatList
-        data={users}
-        renderItem={renderUserItem}
-        keyExtractor={item => item.id?.toString() || ''}
-        contentContainerStyle={styles.listContainer}
-      />
+      {users.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Nenhum usuário cadastrado</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={users}
+          renderItem={renderUserItem}
+          keyExtractor={item => item.id?.toString() || ''}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
     </View>
   );
 }
@@ -140,5 +160,22 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f6fa',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 }); 

@@ -7,32 +7,28 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Platform
+  ActivityIndicator
 } from 'react-native';
-import RNPickerSelect from 'react-native-picker-select';
+import { Picker } from '@react-native-picker/picker';
 import { userRepository } from '../../../database/userRepository';
 import { useRouter } from 'expo-router';
 
 type AccessLevel = 1 | 2 | 3 | 4;
 
-const accessLevelOptions = [
-  { label: 'Administrador', value: 1 },
-  { label: 'Gerente', value: 2 },
-  { label: 'Caixa', value: 3 },
-  { label: 'Atendente', value: 4 },
-];
-
 export default function NewUser() {
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [accessLevel, setAccessLevel] = useState<AccessLevel>(4); // 4 = atendente (padrão)
+  const [accessLevel, setAccessLevel] = useState<AccessLevel>(4);
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!name || !username || !password) {
       Alert.alert('Erro', 'Por favor, preencha todos os campos obrigatórios');
       return;
@@ -44,6 +40,8 @@ export default function NewUser() {
     }
 
     try {
+      setIsSubmitting(true);
+      
       await userRepository.create({
         name,
         username,
@@ -55,11 +53,16 @@ export default function NewUser() {
       });
 
       Alert.alert('Sucesso', 'Usuário criado com sucesso', [
-        { text: 'OK', onPress: () => router.back() }
+        { 
+          text: 'OK', 
+          onPress: () => router.back() 
+        }
       ]);
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       Alert.alert('Erro', 'Não foi possível criar o usuário');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -122,18 +125,31 @@ export default function NewUser() {
 
         <Text style={styles.label}>Nível de Acesso*</Text>
         <View style={styles.pickerContainer}>
-          <RNPickerSelect
-            value={accessLevel}
-            onValueChange={(value: AccessLevel) => setAccessLevel(value)}
-            items={accessLevelOptions}
-            style={pickerSelectStyles}
-            useNativeAndroidPickerStyle={false}
-            placeholder={{}}
-          />
+          <Picker
+            selectedValue={accessLevel}
+            onValueChange={(itemValue: AccessLevel) => setAccessLevel(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Administrador" value={1} />
+            <Picker.Item label="Gerente" value={2} />
+            <Picker.Item label="Caixa" value={3} />
+            <Picker.Item label="Atendente" value={4} />
+          </Picker>
         </View>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Criar Usuário</Text>
+        <TouchableOpacity 
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#FFF" />
+              <Text style={styles.loadingText}>Salvando...</Text>
+            </View>
+          ) : (
+            <Text style={styles.submitButtonText}>Criar Usuário</Text>
+          )}
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -167,32 +183,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#DDD',
+    overflow: 'hidden',
+  },
+  picker: {
+    height: 50,
+    width: '100%',
   },
   submitButton: {
-    backgroundColor: '#0a7ea4',
+    backgroundColor: "#0a7ea4",
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 24,
+    height: 50,
+  },
+  submitButtonDisabled: {
+    backgroundColor: "#999",
   },
   submitButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-});
-
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    color: '#333',
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  inputAndroid: {
+  loadingText: {
+    color: '#FFF',
+    marginLeft: 8,
     fontSize: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#333',
+    fontWeight: 'bold',
   },
 }); 
