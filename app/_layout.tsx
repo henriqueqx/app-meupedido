@@ -78,6 +78,13 @@ export default function RootLayout() {
           title: 'Nova Venda' 
         }} 
       />
+      <Stack.Screen 
+        name="screens/users/new" 
+        options={{ 
+          title: 'Novo Usuário',
+          presentation: 'modal'
+        }} 
+      />
     </Stack>
   );
 }
