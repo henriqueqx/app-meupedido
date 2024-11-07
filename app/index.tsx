@@ -7,6 +7,8 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from '@expo/vector-icons';
 import { userRepository } from '../database/userRepository';
@@ -16,20 +18,40 @@ export default function Login() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (!username || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
+
     try {
+      setIsLoading(true);
       const user = await userRepository.authenticate(username, password);
+      
       if (user) {
         console.log('Login realizado com sucesso:', user);
         router.replace('screens/home' as any);
       } else {
-        console.log('Usuário ou senha inválidos');
-        // Aqui você pode implementar uma mensagem de erro
+        Alert.alert(
+          'Erro', 
+          'Usuário ou senha inválidos',
+          [
+            { 
+              text: 'OK',
+              onPress: () => {
+                setPassword(''); // Limpa a senha após erro
+              }
+            }
+          ]
+        );
       }
     } catch (error) {
       console.error('Erro ao realizar login:', error);
-      // Aqui você pode implementar uma mensagem de erro
+      Alert.alert('Erro', 'Ocorreu um erro ao tentar fazer login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,6 +76,7 @@ export default function Login() {
             onChangeText={setUsername}
             autoCapitalize="none"
             autoCorrect={false}
+            editable={!isLoading}
           />
         </View>
 
@@ -66,17 +89,26 @@ export default function Login() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            editable={!isLoading}
           />
         </View>
 
         <TouchableOpacity 
-          style={styles.loginButton}
+          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
           onPress={handleLogin}
+          disabled={isLoading}
         >
-          <Text style={styles.loginButtonText}>Entrar</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Entrar</Text>
+          )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity 
+          style={styles.forgotPassword}
+          disabled={isLoading}
+        >
           <Text style={styles.forgotPasswordText}>Esqueceu sua senha?</Text>
         </TouchableOpacity>
       </View>
@@ -141,5 +173,8 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: "#0a7ea4",
     fontSize: 14,
+  },
+  loginButtonDisabled: {
+    backgroundColor: "#999",
   },
 });

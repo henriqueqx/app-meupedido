@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Lanchonete App 778 </Text>
+        <Text style={styles.headerTitle}>Lanchonete App </Text>
         <TouchableOpacity onPress={() => router.push('screens/profile' as any)}>
           <Ionicons name="person-circle-outline" size={32} color="#0a7ea4" />
         </TouchableOpacity>
