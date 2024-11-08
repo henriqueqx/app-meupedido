@@ -13,12 +13,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { userRepository } from '../database/userRepository';
 import { useRouter } from 'expo-router';
+import { useAuth } from './contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -31,7 +33,7 @@ export default function Login() {
       const user = await userRepository.authenticate(username, password);
       
       if (user) {
-        console.log('Login realizado com sucesso:', user);
+        await signIn(user);
         router.replace('screens/home' as any);
       } else {
         Alert.alert(
@@ -41,7 +43,7 @@ export default function Login() {
             { 
               text: 'OK',
               onPress: () => {
-                setPassword(''); // Limpa a senha após erro
+                setPassword('');
               }
             }
           ]

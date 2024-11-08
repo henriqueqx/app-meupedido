@@ -1,4 +1,4 @@
-import { openDatabase, SQLTransaction, SQLResultSet, SQLError } from 'expo-sqlite/legacy';
+import { getDatabase } from './database';
 
 export interface User {
   id?: number;
@@ -13,12 +13,10 @@ export interface User {
   last_login?: string;
 }
 
-const db = openDatabase('lanchonete.db');
-
 export const userRepository = {
   create: (user: User): Promise<number> => {
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           `INSERT INTO users (username, password, name, email, phone, access_level_id) 
            VALUES (?, ?, ?, ?, ?, ?)`,
@@ -42,7 +40,7 @@ export const userRepository = {
 
   authenticate: (username: string, password: string): Promise<User | null> => {
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           `SELECT u.*, al.name as access_level_name 
            FROM users u 
@@ -71,7 +69,7 @@ export const userRepository = {
 
   findAll: (): Promise<User[]> => {
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           `SELECT u.*, al.name as access_level_name 
            FROM users u 
@@ -92,7 +90,7 @@ export const userRepository = {
     const values = [...Object.values(user).map(v => v ?? null), id];
 
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           `UPDATE users SET ${fields} WHERE id = ?`,
           values,
@@ -108,7 +106,7 @@ export const userRepository = {
 
   deactivate: (id: number): Promise<void> => {
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           'UPDATE users SET active = 0 WHERE id = ?',
           [id],
@@ -124,7 +122,7 @@ export const userRepository = {
 
   findById: (id: number): Promise<User | null> => {
     return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
+      getDatabase().transaction((tx) => {
         tx.executeSql(
           `SELECT u.*, al.name as access_level_name 
            FROM users u 
