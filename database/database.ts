@@ -48,6 +48,47 @@ export const initDatabase = async () => {
       });
     });
 
+    // Criar tabelas de pedidos
+    await new Promise<void>((resolve, reject) => {
+      db.transaction(tx => {
+        // Tabela de pedidos
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            customer_name TEXT,
+            table_number INTEGER,
+            status TEXT NOT NULL,
+            total REAL NOT NULL,
+            payment_method TEXT,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            user_id INTEGER,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+          )
+        `);
+
+        // Tabela de itens do pedido
+        tx.executeSql(`
+          CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantity INTEGER NOT NULL,
+            unit_price REAL NOT NULL,
+            notes TEXT,
+            FOREIGN KEY (order_id) REFERENCES orders (id),
+            FOREIGN KEY (product_id) REFERENCES products (id)
+          )
+        `);
+
+        resolve();
+      }, error => {
+        reject(error);
+        return true;
+      });
+    });
+
     return new Promise((resolve, reject) => {
       db.transaction(
         (tx) => {
