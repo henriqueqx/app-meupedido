@@ -280,6 +280,34 @@ export const initDatabase = async () => {
               }
             }
           );
+
+          // Adicionar à função initDatabase
+          tx.executeSql(
+            `CREATE TABLE IF NOT EXISTS inventory_movements (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              product_id INTEGER NOT NULL,
+              type TEXT NOT NULL, -- 'in' ou 'out'
+              quantity INTEGER NOT NULL,
+              reason TEXT NOT NULL, -- 'sale', 'purchase', 'adjustment'
+              order_id INTEGER,
+              notes TEXT,
+              created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+              user_id INTEGER NOT NULL,
+              FOREIGN KEY (product_id) REFERENCES products(id),
+              FOREIGN KEY (order_id) REFERENCES orders(id),
+              FOREIGN KEY (user_id) REFERENCES users(id)
+            );`
+          );
+
+          tx.executeSql(
+            `CREATE TABLE IF NOT EXISTS product_stock (
+              product_id INTEGER PRIMARY KEY,
+              quantity INTEGER NOT NULL DEFAULT 0,
+              min_quantity INTEGER DEFAULT 0,
+              last_updated TEXT DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (product_id) REFERENCES products(id)
+            );`
+          );
         },
         (error) => {
           console.error("Erro ao inicializar banco de dados:", error);
