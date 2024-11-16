@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -17,6 +17,7 @@ import { formatCurrency } from '../../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
 import { CustomerAutocomplete } from '../../components/CustomerAutocomplete';
 import { Customer } from '../../../database/customerRepository';
+import { cashRepository } from '../../../database/cashRepository';
 
 interface CartItem extends Product {
   quantity: number;
@@ -95,23 +96,38 @@ export default function NewSale() {
       return;
     }
 
+    if (!user?.id) {
+      Alert.alert('Erro', 'Usuário não identificado');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
+
+      const cashStatus = await cashRepository.getCurrentStatus();
+      if (!cashStatus?.is_open) {
+        Alert.alert('Erro', 'O caixa precisa estar aberto para registrar vendas');
+        return;
+      }
       
-      const newOrder: Order = {
+      const total = getTotal();
+      
+      const newOrder = {
         customer_id: selectedCustomer?.id || null,
+        user_id: user.id,
         table_number: tableNumber,
         status: 'pending',
-        total: getTotal(),
+        total,
         items: cartItems.map(item => ({
           product_id: item.id!,
           quantity: item.quantity,
-          unit_price: item.price,
-          notes: item.notes
+          unit_price: item.price
         }))
       };
 
-      await orderRepository.create(newOrder);
+      console.log('Criando pedido:', newOrder);
+      const orderId = await orderRepository.create(newOrder);
+      console.log('Pedido criado com ID:', orderId);
 
       Alert.alert('Sucesso', 'Pedido criado com sucesso', [
         { 
@@ -121,7 +137,11 @@ export default function NewSale() {
       ]);
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
-      Alert.alert('Erro', 'Não foi possível criar o pedido');
+      if (error instanceof Error) {
+        Alert.alert('Erro', error.message);
+      } else {
+        Alert.alert('Erro', 'Não foi possível criar o pedido');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -231,7 +251,12 @@ export default function NewSale() {
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator color="#FFF" />
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#FFF" size="small" />
+                <Text style={[styles.submitButtonText, { marginLeft: 8 }]}>
+                  Finalizando...
+                </Text>
+              </View>
             ) : (
               <Text style={styles.submitButtonText}>Finalizar Pedido</Text>
             )}
@@ -384,14 +409,15 @@ const styles = StyleSheet.create({
     color: '#0a7ea4',
   },
   submitButton: {
-    backgroundColor: '#2ecc71',
+    backgroundColor: '#0a7ea4',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 16,
   },
   submitButtonDisabled: {
-    backgroundColor: '#999',
+    opacity: 0.7,
   },
   submitButtonText: {
     color: '#FFF',
@@ -399,8 +425,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
 }); 

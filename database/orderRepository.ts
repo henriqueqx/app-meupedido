@@ -1,5 +1,6 @@
 import { getDatabase } from "./database";
 import { Product } from "./productRepository";
+import { cashRepository } from "./cashRepository";
 
 export interface OrderItem {
   id?: number;
@@ -19,53 +20,113 @@ export interface OrderItem {
 export interface Order {
   id?: number;
   customer_id?: number | null;
-  customer_name?: string;
-  customer_phone?: string;
+  user_id: number;
   table_number?: string;
   status: string;
   total: number;
   created_at?: string;
   items: OrderItem[];
+  _customer?: {
+    name: string;
+    phone?: string;
+  };
 }
 
 export const orderRepository = {
   async create(order: Order): Promise<number> {
     const db = getDatabase();
-    return new Promise((resolve, reject) => {
-      db.transaction((tx) => {
-        tx.executeSql(
-          `INSERT INTO orders (customer_id, table_number, status, total) 
-             VALUES (?, ?, ?, ?)`,
-          [
-            order.customer_id || null,
-            order.table_number || null,
-            order.status,
-            order.total,
-          ],
-          (_, result) => {
-            const orderId = result.insertId!;
+    console.log("Iniciando criação do pedido");
 
-            order.items.forEach((item) => {
+    // Verificar se o caixa está aberto antes da transação
+    const cashStatus = await cashRepository.getCurrentStatus();
+    if (!cashStatus?.is_open) {
+      throw new Error("O caixa precisa estar aberto para registrar vendas");
+    }
+
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        (tx) => {
+          // Primeiro, inserir o pedido
+          tx.executeSql(
+            `INSERT INTO orders (customer_id, user_id, table_number, status, total) 
+           VALUES (?, ?, ?, ?, ?)`,
+            [
+              order.customer_id || null,
+              order.user_id,
+              order.table_number || null,
+              order.status,
+              order.total,
+            ],
+            (_, result) => {
+              const orderId = result.insertId!;
+              console.log("Pedido inserido, ID:", orderId);
+
+              // Depois, inserir os itens
+              order.items.forEach((item) => {
+                tx.executeSql(
+                  `INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
+                 VALUES (?, ?, ?, ?)`,
+                  [orderId, item.product_id, item.quantity, item.unit_price],
+                  () => {
+                    console.log("Item inserido para o pedido:", orderId);
+                  },
+                  (_, error) => {
+                    console.error("Erro ao inserir item:", error);
+                    return false;
+                  }
+                );
+              });
+
+              // Por fim, registrar no caixa
               tx.executeSql(
-                `INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
-                   VALUES (?, ?, ?, ?)`,
-                [orderId, item.product_id, item.quantity, item.unit_price],
-                undefined,
+                `INSERT INTO cash_movements (type, amount, description, order_id, user_id)
+               VALUES (?, ?, ?, ?, ?)`,
+                [
+                  "sale",
+                  order.total,
+                  `Venda - Pedido #${orderId}${
+                    order.table_number ? ` - Mesa ${order.table_number}` : ""
+                  }`,
+                  orderId,
+                  order.user_id,
+                ],
+                () => {
+                  console.log("Movimento de caixa registrado");
+                  // Atualizar o saldo do caixa
+                  tx.executeSql(
+                    "UPDATE cash_status SET current_amount = current_amount + ? WHERE is_open = 1",
+                    [order.total],
+                    () => {
+                      console.log("Saldo do caixa atualizado");
+                      resolve(orderId);
+                    },
+                    (_, error) => {
+                      console.error("Erro ao atualizar saldo:", error);
+                      return false;
+                    }
+                  );
+                },
                 (_, error) => {
-                  reject(error);
+                  console.error("Erro ao registrar movimento:", error);
                   return false;
                 }
               );
-            });
-
-            resolve(orderId);
-          },
-          (_, error) => {
-            reject(error);
-            return false;
-          }
-        );
-      });
+            },
+            (_, error) => {
+              console.error("Erro ao inserir pedido:", error);
+              reject(error);
+              return false;
+            }
+          );
+        },
+        (error) => {
+          console.error("Erro na transação:", error);
+          reject(error);
+        },
+        () => {
+          console.log("Transação completada com sucesso");
+        }
+      );
     });
   },
 
@@ -85,9 +146,9 @@ export const orderRepository = {
               return;
             }
 
-            const order = rows.item(0);
+            const orderData = rows.item(0);
 
-            // Buscar os itens do pedido (mantém o código existente)
+            // Buscar os itens do pedido
             tx.executeSql(
               `SELECT oi.*, p.name as product_name 
                FROM order_items oi
@@ -99,10 +160,26 @@ export const orderRepository = {
                 for (let i = 0; i < itemRows.length; i++) {
                   items.push(itemRows.item(i));
                 }
-                resolve({
-                  ...order,
+
+                // Construir o objeto Order com a estrutura correta
+                const order: Order = {
+                  id: orderData.id,
+                  customer_id: orderData.customer_id,
+                  user_id: orderData.user_id,
+                  table_number: orderData.table_number,
+                  status: orderData.status,
+                  total: orderData.total,
+                  created_at: orderData.created_at,
                   items,
-                });
+                  _customer: orderData.customer_name
+                    ? {
+                        name: orderData.customer_name,
+                        phone: orderData.customer_phone,
+                      }
+                    : undefined,
+                };
+
+                resolve(order);
               }
             );
           },
@@ -121,62 +198,30 @@ export const orderRepository = {
 
       db.transaction((tx) => {
         tx.executeSql(
-          `SELECT o.*, 
-                  oi.id as item_id, 
-                  oi.quantity, 
-                  oi.unit_price, 
-                  oi.notes as item_notes,
-                  p.name as product_name,
-                  p.price as product_price,
-                  p.category as product_category,
-                  c.name as customer_name,
-                  c.phone as customer_phone
+          `SELECT o.*, c.name as customer_name, c.phone as customer_phone
            FROM orders o
-           LEFT JOIN order_items oi ON o.id = oi.order_id
-           LEFT JOIN products p ON oi.product_id = p.id
            LEFT JOIN customers c ON o.customer_id = c.id
            ORDER BY o.created_at DESC`,
           [],
           (_, { rows }) => {
-            const ordersMap = new Map<number, Order>();
+            const orders = rows._array.map((row) => ({
+              id: row.id,
+              customer_id: row.customer_id,
+              user_id: row.user_id,
+              table_number: row.table_number,
+              status: row.status,
+              total: row.total,
+              created_at: row.created_at,
+              items: [], // Será preenchido depois se necessário
+              _customer: row.customer_name
+                ? {
+                    name: row.customer_name,
+                    phone: row.customer_phone,
+                  }
+                : undefined,
+            }));
 
-            rows._array.forEach((row) => {
-              if (!ordersMap.has(row.id)) {
-                // Criar novo pedido
-                ordersMap.set(row.id, {
-                  id: row.id,
-                  customer_id: row.customer_id,
-                  customer_name: row.customer_name,
-                  customer_phone: row.customer_phone,
-                  table_number: row.table_number,
-                  status: row.status,
-                  total: row.total,
-                  created_at: row.created_at,
-                  items: [],
-                });
-              }
-
-              // Adicionar item ao pedido se existir
-              if (row.item_id) {
-                const order = ordersMap.get(row.id)!;
-                order.items.push({
-                  id: row.item_id,
-                  order_id: row.id,
-                  product_id: row.product_id,
-                  quantity: row.quantity,
-                  unit_price: row.unit_price,
-                  notes: row.item_notes,
-                  product: {
-                    id: row.product_id,
-                    name: row.product_name,
-                    price: row.product_price,
-                    category: row.product_category,
-                  },
-                });
-              }
-            });
-
-            resolve(Array.from(ordersMap.values()));
+            resolve(orders);
           },
           (_, error) => {
             reject(error);
