@@ -205,6 +205,81 @@ export const initDatabase = async () => {
               }
             }
           );
+
+          // Tabela de movimentações do caixa
+          tx.executeSql(
+            `CREATE TABLE IF NOT EXISTS cash_movements (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              type TEXT NOT NULL, -- 'opening', 'closing', 'sale', 'expense', 'withdrawal', 'deposit'
+              amount REAL NOT NULL,
+              description TEXT,
+              order_id INTEGER NULL,
+              created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+              user_id INTEGER NOT NULL,
+              FOREIGN KEY (order_id) REFERENCES orders(id),
+              FOREIGN KEY (user_id) REFERENCES users(id)
+            );`
+          );
+
+          // Tabela de status do caixa
+          tx.executeSql(
+            `CREATE TABLE IF NOT EXISTS cash_status (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              is_open BOOLEAN NOT NULL DEFAULT 0,
+              opened_at TEXT,
+              opened_by INTEGER,
+              initial_amount REAL,
+              current_amount REAL,
+              FOREIGN KEY (opened_by) REFERENCES users(id)
+            );`
+          );
+
+          // Verificar se a coluna user_id existe na tabela orders
+          tx.executeSql(
+            `SELECT name FROM pragma_table_info('orders') WHERE name = 'user_id'`,
+            [],
+            (_, { rows }) => {
+              if (rows.length === 0) {
+                // Adicionar coluna user_id se não existir
+                tx.executeSql(
+                  `ALTER TABLE orders ADD COLUMN user_id INTEGER NOT NULL DEFAULT 1 
+                   REFERENCES users(id)`,
+                  [],
+                  () => {
+                    console.log("Coluna user_id adicionada com sucesso");
+                  },
+                  (_, error) => {
+                    console.error("Erro ao adicionar coluna user_id:", error);
+                    return false;
+                  }
+                );
+              }
+            }
+          );
+
+          // Verificar se precisamos renomear a coluna price para unit_price na tabela order_items
+          tx.executeSql(
+            `SELECT name FROM pragma_table_info('order_items') WHERE name = 'price'`,
+            [],
+            (_, { rows }) => {
+              if (rows.length > 0) {
+                // Renomear coluna price para unit_price
+                tx.executeSql(
+                  `ALTER TABLE order_items RENAME COLUMN price TO unit_price`,
+                  [],
+                  () => {
+                    console.log(
+                      "Coluna price renomeada para unit_price com sucesso"
+                    );
+                  },
+                  (_, error) => {
+                    console.error("Erro ao renomear coluna price:", error);
+                    return false;
+                  }
+                );
+              }
+            }
+          );
         },
         (error) => {
           console.error("Erro ao inicializar banco de dados:", error);
