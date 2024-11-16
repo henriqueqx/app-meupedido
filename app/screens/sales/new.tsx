@@ -12,9 +12,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { productRepository, Product } from '../../../database/productRepository';
-import { orderRepository } from '../../../database/orderRepository';
+import { orderRepository, Order } from '../../../database/orderRepository';
 import { formatCurrency } from '../../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
+import { CustomerAutocomplete } from '../../components/CustomerAutocomplete';
+import { Customer } from '../../../database/customerRepository';
 
 interface CartItem extends Product {
   quantity: number;
@@ -28,6 +30,7 @@ export default function NewSale() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [tableNumber, setTableNumber] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -86,10 +89,7 @@ export default function NewSale() {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    if (!user || !user.id) {
-      Alert.alert('Erro', 'Usuário não autenticado');
-      return;
-    }
+
     if (cartItems.length === 0) {
       Alert.alert('Erro', 'Adicione pelo menos um item ao pedido');
       return;
@@ -98,22 +98,26 @@ export default function NewSale() {
     try {
       setIsSubmitting(true);
       
-      await orderRepository.create({
-        customer_name: customerName || undefined,
-        table_number: tableNumber ? Number(tableNumber) : undefined,
+      const newOrder: Order = {
+        customer_id: selectedCustomer?.id || null,
+        table_number: tableNumber,
         status: 'pending',
         total: getTotal(),
-        user_id: user.id,
         items: cartItems.map(item => ({
           product_id: item.id!,
           quantity: item.quantity,
           unit_price: item.price,
           notes: item.notes
         }))
-      });
+      };
 
-      Alert.alert('Sucesso', 'Pedido realizado com sucesso', [
-        { text: 'OK', onPress: () => router.back() }
+      await orderRepository.create(newOrder);
+
+      Alert.alert('Sucesso', 'Pedido criado com sucesso', [
+        { 
+          text: 'OK', 
+          onPress: () => router.back() 
+        }
       ]);
     } catch (error) {
       console.error('Erro ao criar pedido:', error);
@@ -121,6 +125,11 @@ export default function NewSale() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setCustomerName(customer.name);
   };
 
   const renderProductItem = ({ item }: { item: Product }) => (
@@ -170,11 +179,10 @@ export default function NewSale() {
   return (
     <View style={styles.container}>
       <View style={styles.customerInfo}>
-        <TextInput
-          style={styles.input}
-          placeholder="Nome do cliente"
+        <CustomerAutocomplete
           value={customerName}
           onChangeText={setCustomerName}
+          onSelect={handleCustomerSelect}
         />
         <TextInput
           style={[styles.input, styles.tableInput]}
@@ -242,7 +250,7 @@ const styles = StyleSheet.create({
   customerInfo: {
     flexDirection: 'row',
     padding: 16,
-    gap: 16,
+    alignItems: 'center',
   },
   input: {
     flex: 1,
@@ -254,7 +262,9 @@ const styles = StyleSheet.create({
     borderColor: '#DDD',
   },
   tableInput: {
-    flex: 0.3,
+    width: 80,
+    marginLeft: 8,
+    height: 45,
   },
   searchInput: {
     backgroundColor: '#FFF',

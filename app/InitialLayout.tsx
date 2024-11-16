@@ -120,6 +120,19 @@ export function InitialLayout() {
           title: 'Editar Usuário'
         }} 
       />
+      <Stack.Screen 
+        name="screens/customers/new" 
+        options={{ 
+          title: 'Novo Cliente',
+          presentation: 'modal'
+        }} 
+      />
+      <Stack.Screen 
+        name="screens/customers/edit" 
+        options={{ 
+          title: 'Editar Cliente'
+        }} 
+      />
     </Stack>
   );
 } 
