@@ -1,14 +1,9 @@
-import {
-  openDatabase,
-  SQLTransaction,
-  SQLResultSet,
-  SQLError,
-} from "expo-sqlite/legacy";
-import * as FileSystem from "expo-file-system";
+import { openDatabase, SQLTransaction, SQLResultSet, SQLError } from 'expo-sqlite/legacy';
+import * as FileSystem from 'expo-file-system';
 
-const DB_NAME = "lanchonete.db";
+const DB_NAME = 'lanchonete.db';
 let db: ReturnType<typeof openDatabase>;
-//
+
 const getDatabasePath = async () => {
   const documentDirectory = FileSystem.documentDirectory;
   return documentDirectory ? `${documentDirectory}SQLite/${DB_NAME}` : DB_NAME;
@@ -26,14 +21,13 @@ export const initDatabase = async () => {
   try {
     await ensureDatabaseDirectoryExists();
     const dbPath = await getDatabasePath();
-
+    
     db = openDatabase(DB_NAME);
 
     // Criar tabela de produtos
     await new Promise<void>((resolve, reject) => {
-      db.transaction((tx) => {
-        tx.executeSql(
-          `
+      db.transaction(tx => {
+        tx.executeSql(`
           CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -45,23 +39,20 @@ export const initDatabase = async () => {
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
           )
-        `,
-          [],
-          () => resolve(),
-          (_, error) => {
-            reject(error);
-            return true; // Indica que o erro foi tratado
-          }
-        );
+        `, [], 
+        () => resolve(),
+        (_, error) => {
+          reject(error);
+          return true; // Indica que o erro foi tratado
+        });
       });
     });
 
     // Criar tabelas de pedidos
     await new Promise<void>((resolve, reject) => {
-      db.transaction(
-        (tx) => {
-          // Tabela de pedidos
-          tx.executeSql(`
+      db.transaction(tx => {
+        // Tabela de pedidos
+        tx.executeSql(`
           CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             customer_name TEXT,
@@ -77,8 +68,8 @@ export const initDatabase = async () => {
           )
         `);
 
-          // Tabela de itens do pedido
-          tx.executeSql(`
+        // Tabela de itens do pedido
+        tx.executeSql(`
           CREATE TABLE IF NOT EXISTS order_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             order_id INTEGER NOT NULL,
@@ -91,13 +82,11 @@ export const initDatabase = async () => {
           )
         `);
 
-          resolve();
-        },
-        (error) => {
-          reject(error);
-          return true;
-        }
-      );
+        resolve();
+      }, error => {
+        reject(error);
+        return true;
+      });
     });
 
     return new Promise((resolve, reject) => {
@@ -131,7 +120,7 @@ export const initDatabase = async () => {
 
           // Verificar se já existem níveis de acesso
           tx.executeSql(
-            "SELECT COUNT(*) as count FROM access_levels",
+            'SELECT COUNT(*) as count FROM access_levels',
             [],
             (_, { rows }) => {
               if (rows.item(0).count === 0) {
@@ -149,8 +138,8 @@ export const initDatabase = async () => {
 
           // Verificar se já existe usuário admin
           tx.executeSql(
-            "SELECT COUNT(*) as count FROM users WHERE username = ?",
-            ["admin"],
+            'SELECT COUNT(*) as count FROM users WHERE username = ?',
+            ['admin'],
             (_, { rows }) => {
               if (rows.item(0).count === 0) {
                 // Inserir usuário admin padrão apenas se não existir
@@ -163,17 +152,17 @@ export const initDatabase = async () => {
           );
         },
         (error) => {
-          console.error("Erro ao inicializar banco de dados:", error);
+          console.error('Erro ao inicializar banco de dados:', error);
           reject(error);
         },
         () => {
-          console.log("Banco de dados inicializado com sucesso");
+          console.log('Banco de dados inicializado com sucesso');
           resolve(true);
         }
       );
     });
   } catch (error) {
-    console.error("Erro ao configurar banco de dados:", error);
+    console.error('Erro ao configurar banco de dados:', error);
     throw error;
   }
 };
@@ -183,4 +172,4 @@ export const getDatabase = () => {
     db = openDatabase(DB_NAME);
   }
   return db;
-};
+}; 
