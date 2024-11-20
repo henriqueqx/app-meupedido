@@ -13,6 +13,9 @@ import { formatCurrency } from '../../utils/format';
 import { useAuth } from '../../contexts/AuthContext';
 import { orderRepository } from '../../database/orderRepository';
 import { cashRepository } from '../../database/cashRepository';
+import { getDatabase } from '../../database/database';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 
 interface DashboardCardProps {
   title: string;
@@ -67,9 +70,25 @@ export default function Home() {
     totalOrders: 0
   });
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const initApp = async () => {
+        try {
+          const db = getDatabase();
+          if (!db) {
+            console.log('Aguardando inicialização do banco de dados...');
+            return;
+          }
+          
+          await loadDashboardData();
+        } catch (error) {
+          console.error('Erro na inicialização:', error);
+        }
+      };
+
+      initApp();
+    }, [])
+  );
 
   const loadDashboardData = async () => {
     try {
