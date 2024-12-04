@@ -166,32 +166,6 @@ npm install
 npx expo start
 6.3 Build e Deploy
 
-Android:
-bashCopyeas build -p android --profile production
-
-
-7. Manutenção e Suporte
-7.1 Logs e Monitoramento
-
-Console de erros
-Registro de operações
-Monitoramento de performance
-Alertas de erro
-
-7.2 Backup e Recuperação
-
-Backup local automático
-Exportação de dados
-Restauração do sistema
-Recuperação de erros
-
-7.3 Atualizações
-
-Versionamento semântico
-Changelog
-Atualizações OTA
-Migrações de banco
-
 8. Considerações Finais
 8.1 Limitações Conhecidas
 
@@ -199,11 +173,3 @@ Operação somente local
 Sem sincronização em nuvem
 Limite de armazenamento local
 Performance em grandes volumes
-
-8.2 Roadmap
-
-Sincronização em nuvem
-Integração com impressoras
-Módulo fiscal
-Dashboard web
-Backup em nuvem
