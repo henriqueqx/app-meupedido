@@ -1,126 +1,209 @@
-# Lanchonete App
+Documentação do Projeto - Lanchonete App
+1. Visão Geral do Projeto
+1.1 Introdução
+O Lanchonete App é uma aplicação mobile desenvolvida em React Native para gestão completa de lanchonetes e pequenos restaurantes. O sistema oferece funcionalidades essenciais para o gerenciamento do negócio, incluindo controle de vendas, gestão de estoque, administração financeira e geração de relatórios.
+1.2 Objetivos
 
-Aplicativo mobile desenvolvido em React Native para gestão completa de lanchonetes, oferecendo funcionalidades de vendas, controle de estoque, gestão de usuários e relatórios.
+Digitalizar processos operacionais de lanchonetes
+Facilitar o controle de vendas e pedidos
+Melhorar a gestão de estoque
+Fornecer controle financeiro eficiente
+Disponibilizar informações gerenciais
+Permitir operação em dispositivos móveis
+Funcionar offline
 
-## 🚀 Sobre o Projeto
+1.3 Público-Alvo
 
-Este aplicativo foi desenvolvido para atender às necessidades de lanchonetes de pequeno e médio porte, oferecendo uma solução completa e intuitiva para gestão do negócio através de dispositivos móveis.
+Proprietários de lanchonetes
+Gerentes
+Atendentes
+Operadores de caixa
 
-## 💻 Tecnologias Utilizadas
+2. Arquitetura do Sistema
+2.1 Tecnologias Utilizadas
 
-- React Native
-- TypeScript
-- SQLite
-- Redux
-- React Navigation
-- Styled Components
+Frontend: React Native com Expo
+Banco de Dados: SQLite
+Gerenciamento de Estado: Context API
+Navegação: Expo Router
+Autenticação: AsyncStorage
+UI/UX: Componentes nativos e custom
 
-## 📱 Funcionalidades Principais
+2.2 Estrutura do Projeto
+Copyapp/
+├── components/       # Componentes reutilizáveis
+├── screens/         # Telas da aplicação
+├── contexts/        # Contextos do React
+├── database/        # Configuração e repositories
+├── utils/          # Utilitários e helpers
+└── hooks/          # Custom hooks
+2.3 Banco de Dados
+O sistema utiliza SQLite para armazenamento local, com as seguintes tabelas principais:
 
-- Gestão de vendas e pedidos
-- Controle de estoque
-- Gestão de usuários e permissões
-- Relatórios gerenciais
-- Funcionamento offline
-- Backup automático
+users (Usuários)
+products (Produtos)
+orders (Pedidos)
+order_items (Itens dos pedidos)
+customers (Clientes)
+cash_movements (Movimentações de caixa)
 
-## 📋 Requisitos do Sistema
+3. Funcionalidades Principais
+3.1 Autenticação e Autorização
 
-### Requisitos Funcionais
+Login com usuário e senha
+Níveis de acesso:
 
-#### Gestão de Usuários
-- Cadastro de funcionários com níveis de acesso
-- Autenticação com login e senha
-- Recuperação de senha
-- Edição de perfil
+Administrador
+Gerente
+Caixa
+Atendente
 
-#### Gestão de Vendas
-- Registro de vendas com itens e quantidades
-- Geração de número único por venda
-- Cálculo automático de valores
-- Múltiplas formas de pagamento
-- Histórico de vendas
 
-#### Gestão de Estoque
-- Cadastro e controle de produtos
-- Atualização automática após vendas
-- Sistema de alertas
-- Histórico de movimentações
+Gestão de permissões
+Controle de sessão
 
-#### Relatórios
-- Vendas por período
-- Produtos mais vendidos
-- Movimentação de estoque
-- Fluxo de caixa
+3.2 Gestão de Produtos
 
-### Requisitos Não Funcionais
+Cadastro de produtos
+Categorização
+Precificação
+Controle de estoque
+Produtos ativos/inativos
 
-#### Usabilidade
-- Interface intuitiva para mobile
-- Modo escuro/claro
-- Tempo de resposta < 2s
-- Feedback visual
+3.3 Gestão de Pedidos
 
-#### Performance
-- Funcionamento offline
-- Suporte multi-usuário
-- Backup automático
+Criação de pedidos
+Seleção de produtos
+Controle de quantidades
+Observações por item
+Status do pedido
+Vinculação com cliente/mesa
 
-#### Segurança
-- Criptografia de dados
-- Log de operações
-- Logout automático
-- Validação de dados
+3.4 Controle Financeiro
 
-## 🔧 Configuração do Ambiente
+Abertura/fechamento de caixa
+Registro de vendas
+Entradas/saídas
+Saldo atual
+Histórico de movimentações
 
-1. Clone o repositório
+3.5 Gestão de Clientes
 
-```bash
-git clone https://github.com/your-username/lanchonete-app.git
-```
+Cadastro de clientes
+Histórico de pedidos
+Busca e filtros
+Dados de contato
 
-2. Install dependencies
+3.6 Relatórios
 
-   ```bash
-   npm install
-   ```
+Vendas por período
+Produtos mais vendidos
+Movimentação financeira
+Histórico de operações
 
-3. Start the app
 
-   ```bash
-    npx expo start
-   ```
+Componentes comuns:
 
-In the output, you'll find options to open the app in a
+Botões
+Campos de entrada
+Cards
+Listas
+Modais
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
-## Get a fresh project
+4.2 Fluxos Principais
 
-When you're ready, run:
+Login
 
-```bash
-npm run reset-project
-```
+Entrada de credenciais
+Validação
+Redirecionamento
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-## Learn more
+Venda
 
-To learn more about developing your project with Expo, look at the following resources:
+Seleção de produtos
+Quantidade e observações
+Cliente/mesa
+Confirmação
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Join the community
+Caixa
 
-Join our community of developers creating universal apps.
+Abertura
+Movimentações
+Fechamento
+Conferência
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+5. Segurança e Performance
+5.1 Segurança
+
+Autenticação local
+Validação de dados
+Controle de acesso por nível
+
+
+6. Requisitos Técnicos
+6.1 Ambiente de Desenvolvimento
+
+Node.js 18+
+Expo CLI
+Android Studio / Xcode
+VS Code (recomendado)
+Git
+
+6.2 Instalação e Configuração
+bashCopy# Clonar repositório
+git clone https://github.com/username/lanchonete-app.git
+
+# Instalar dependências
+cd lanchonete-app
+npm install
+
+# Iniciar aplicação
+npx expo start
+6.3 Build e Deploy
+
+Android:
+bashCopyeas build -p android --profile production
+
+
+7. Manutenção e Suporte
+7.1 Logs e Monitoramento
+
+Console de erros
+Registro de operações
+Monitoramento de performance
+Alertas de erro
+
+7.2 Backup e Recuperação
+
+Backup local automático
+Exportação de dados
+Restauração do sistema
+Recuperação de erros
+
+7.3 Atualizações
+
+Versionamento semântico
+Changelog
+Atualizações OTA
+Migrações de banco
+
+8. Considerações Finais
+8.1 Limitações Conhecidas
+
+Operação somente local
+Sem sincronização em nuvem
+Limite de armazenamento local
+Performance em grandes volumes
+
+8.2 Roadmap
+
+Sincronização em nuvem
+Integração com impressoras
+Módulo fiscal
+Dashboard web
+Backup em nuvem
