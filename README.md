@@ -1,7 +1,9 @@
 Documentação do Projeto - Lanchonete App
+
 1. Visão Geral do Projeto
 1.1 Introdução
 O Lanchonete App é uma aplicação mobile desenvolvida em React Native para gestão completa de lanchonetes e pequenos restaurantes. O sistema oferece funcionalidades essenciais para o gerenciamento do negócio, incluindo controle de vendas, gestão de estoque, administração financeira e geração de relatórios.
+
 1.2 Objetivos
 
 Digitalizar processos operacionais de lanchonetes
